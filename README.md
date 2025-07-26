@@ -1,6 +1,6 @@
-# Rental_Pricing_Advisor
-Capstone project - SmartRentalReports.com
 # 🏡 Rental Pricing Advisor – Capstone Project
+Capstone project - SmartRentalReports.com
+
 
 **Live App:** [https://smartrentalreports.com](https://smartrentalreports.com)  
 **n8n Report Example:** [View HTML Report](https://smartrentalreports.com/report.html?zip=33101&median_price=2400)
