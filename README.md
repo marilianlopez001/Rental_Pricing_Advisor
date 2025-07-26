@@ -30,7 +30,7 @@ Built using real ZORI data from Zillow, the app calculates and displays **recomm
 
 | Layer         | Tech                       |
 |---------------|----------------------------|
-| Frontend      | React ([https://github.com/marilianlopez001/Rental_Pricing_Advisor-frontend)], HTML, CSS |
+| Frontend      | React ([https://github.com/marilianlopez001/Rental_Pricing_Advisor]), HTML, CSS |
 | Backend Logic | n8n (no-code workflow automation) |
 | Hosting       | Netlify (frontend), n8n Cloud (report engine) |
 | Data Source   | Zillow ZORI Dataset (CSV) |
