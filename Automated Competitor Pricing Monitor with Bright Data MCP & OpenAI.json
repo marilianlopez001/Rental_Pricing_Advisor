@@ -1,0 +1,482 @@
+{
+  "name": "Automated Competitor Pricing Monitor with Bright Data MCP & OpenAI",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "4188b754-04e5-491b-9d1e-33769030e9cb",
+      "name": "⏰ Trigger: Check Job Listings",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        2080,
+        1504
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "94a104cf-e1fb-42b2-9613-f943e04547f3",
+              "name": "url",
+              "type": "string",
+              "value": "https://clickup.com/pricing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c7e3e3a6-dfc9-4b10-b760-d223d438b303",
+      "name": "🛠️ Set Search Parameters",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2272,
+        1504
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "532416b3-ae69-4b41-82f5-369e69ccc996",
+      "name": "🧠 OpenAI: LLM Brain",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        3136,
+        1808
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "zYulvvykMZT1xYJ7",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "846bfb1d-d58b-47d1-abde-131cf319c96e",
+      "name": "No Operation, do nothing",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        3952,
+        1360
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Act as a real estate data analyst. Analyze the rental price dataset in Miami-Dade extracted from Google Sheets.\n\nYour task is to:\n1. Detect changes in rental price (ZORI_Rent) by ZIP Code over time.\n2. Identify ZIP Codes with the greatest increases or decreases in rent.\n3. Calculate and report the percentage change between the most recent month and the previous one.\n4. Generate a summary with the most relevant ZIP Codes.\n\nReturn a table with the following columns:\n- ZIP Code\n- City\n- Current ZORI (most recent month)\n- Previous ZORI (prior month)\n- Percentage Change\n- Trend (↑, ↓ or =)\n- Short Comment\n\nRespond in JSON.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "id": "8022ef12-5026-4fbf-8af2-0e91a2f06007",
+      "name": "AI agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        3216,
+        1504
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1dj-7L7U4d2T59AMXL-Gk5W18Qpix8V3bu6FUO0lquPQ",
+          "mode": "list",
+          "cachedResultName": "miami_dade_zori_long_2020_2025-2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dj-7L7U4d2T59AMXL-Gk5W18Qpix8V3bu6FUO0lquPQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1998458632,
+          "mode": "list",
+          "cachedResultName": "miami_dade_zori_long_2020_2025-2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dj-7L7U4d2T59AMXL-Gk5W18Qpix8V3bu6FUO0lquPQ/edit#gid=1998458632"
+        },
+        "options": {}
+      },
+      "id": "e1ec72d3-b1b3-4606-b331-061be896fe3f",
+      "name": "Retrieve Pricing data",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2480,
+        1504
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3RBJx0nJ575JKt20",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "ecde1a05-35fd-4d57-880c-dc426f38f34f",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Retrieve Pricing data').item.json['1 Pricing'] }}",
+              "rightValue": "={{ $('AI agent').item.json.output.plans[0].price }}"
+            },
+            {
+              "id": "96f46f31-2703-4f5f-9cf9-034527f19d38",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Retrieve Pricing data').item.json['2 Pricing'] }}",
+              "rightValue": "={{ $('AI agent').item.json.output.plans[1].price }}1"
+            },
+            {
+              "id": "09861d6d-6553-4d1d-9533-334b5a7c55e1",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Retrieve Pricing data').item.json['3 Pricing'] }}",
+              "rightValue": "={{ $('AI agent').item.json.output.plans[2].price }}"
+            },
+            {
+              "id": "f5a9ca6e-205a-47c3-be52-8c935f4095e7",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Retrieve Pricing data').item.json['4 Pricing'] }}",
+              "rightValue": "={{ $('AI agent').item.json.output.plans[3].price }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4cc13c60-95c0-4d3e-88c5-bd141b74935c",
+      "name": "If price changes",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        3712,
+        1504
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "🟩 SECTION 1: Setup & Historical Data Fetch\n1. Trigger: Check Job Listings\n🕒 (Schedule Node)\nThis starts the automation on a regular interval — daily, weekly, etc.\n\nUse Case: Ensures your workflow continuously monitors rent price changes for Miami-Dade ZIP Codes using updated Google Sheets data.\n\n2. Set Search Parameters\n✏️ (Set Node)\nDefines static inputs like the dataset source, project name, or user-defined filters. These parameters tell the agent what kind of data it will analyze.\n\nUse Case: Customize the automation to track rent pricing trends across ZIP Codes without manual input.\n\n3. Retrieve Pricing Data\n📥 (Google Sheets Node)\nFetches the historical rent prices (ZORI) by ZIP Code from your connected Google Sheet to be used as reference for change detection.\n\nUse Case: Maintains an accurate history of rental prices for comparison over time.",
+        "height": 480,
+        "width": 580,
+        "color": 6
+      },
+      "id": "0bc8b647-8aaf-447c-aefd-b819219b7327",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2032,
+        864
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "4. AI Agent\n🧠 (AI Agent Node)\nAnalyzes pricing data using an OpenAI model to detect trends, calculate changes, and generate insights.\n\nUse Case: Uses AI to evaluate rental price fluctuations across Miami-Dade ZIP Codes. It compares current and previous ZORI values, calculates percentage changes, identifies trends (↑ ↓ =), and returns a summary in JSON format.\n\n5. Auto-Fixing Output Parser\n🛠️ (Output Parser Node)\nCleans and structures the AI agent's output to ensure it follows a consistent and machine-readable format.\n\nUse Case: Ensures the AI-generated data is reliable and compatible with downstream steps, like updating spreadsheets or visualizing results.",
+        "height": 396,
+        "width": 400,
+        "color": 2
+      },
+      "id": "c52243c8-4e6a-4011-ba0c-cc980b3b8f7d",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2720,
+        1072
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "🟥 SECTION 3: Update and Output\n6. Check for Changes\n🔀 (If Node)\nCompares newly analyzed pricing data to the previous values stored in the Google Sheet.\n\nUse Case: Identifies if any ZIP Code has experienced a significant price change. If no changes are detected, the workflow does nothing. If changes are found, it proceeds to update the historical data.\n\n7. Update Google Sheet\n📄 (Update Sheet Node)\nOverwrites the Google Sheet with the latest rental pricing insights and trend analysis.\n\nUse Case: Keeps your rental pricing tracker updated automatically with AI-processed data, so you always have the most recent insights ready for decision-making or display in your web app.",
+        "height": 432,
+        "width": 440,
+        "color": 3
+      },
+      "id": "1d9ae3ab-13e3-43d0-a33c-6deab25cdb82",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3232,
+        896
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 🏡 **Track Miami-Dade Rental Price Trends Automatically**\n\nA no-code automation using **n8n**, **OpenAI**, and **Google Sheets** to analyze rent price trends by ZIP Code using Zillow ZORI data.\n\n---\n\n## 🧩 **SECTION 1: Setup & Historical Data Fetch**\n\n### 🔁 1. **Trigger: Scheduled Run**\n\n🕒 **(Schedule Node)**  \nThis starts the automation on a recurring schedule — weekly, monthly, etc.\n\n**Use Case:** Keeps the rent price insights updated without manual effort.\n\n---\n\n### 🛠️ 2. **Set Search Parameters**\n\n✏️ **(Set Node)**  \nDefines static inputs like the project name, source, or custom description for the data source.\n\n**Use Case:** Helps the AI understand what dataset it's analyzing — in this case, ZORI rent prices from Google Sheets.\n\n---\n\n### 📄 3. **Retrieve Pricing Data**\n\n📥 **(Google Sheets Node)**  \nReads rental pricing data (ZORI values) from your connected spreadsheet.\n\n**Use Case:** Provides ZIP Code-level rent data to compare prices over time.\n\n---\n\n## 🤖 **SECTION 2: AI-Powered Analysis**\n\n### 🧠 4. **AI Agent**\n\n💬 **(OpenAI Agent Node)**  \nProcesses the ZORI rent prices and compares the most recent month with the previous one. It calculates percentage change, detects trends, and summarizes insights.\n\n---\n\n### 🛠️ 5. **Auto-Fixing Output Parser**\n\n🧪 **(Output Parser Node)**  \nStructures the AI response into clean, usable JSON for later steps.\n\n**Use Case:** Ensures the response includes columns like ZIP Code, city, current rent, previous rent, % change, trend, and short comment.\n\n---\n\n## 🔄 **SECTION 3: Compare & Update**\n\n### 🧭 6. **Check for Changes**\n\n🔍 **(If Node)**  \nCompares new AI-generated insights with the previously stored data.\n\n**Use Case:** Only updates the sheet if changes are detected.\n\n---\n\n### 📄 7. **Update Google Sheet**\n\n📤 **(Google Sheets Update Node)**  \nWrites the updated rental trend summary back to the sheet.\n\n**Use Case:** Keeps the rent price dashboard current for use in your Bolt web app.\n\n---\n\n## 🎯 **Why This Matters for Your Capstone**\n\n| 📈 **Insightful** | 🧠 **AI-Driven** | 🧩 **Web-Ready** |\n|------------------|------------------|------------------|\n| ZIP Code rent trends | Uses OpenAI to analyze data | Feeds clean output into your Bolt app |\n\n---\n\n## ✨ **Visual Summary**\n\n[⏱ Trigger] ➝ [✏️ Set Params] ➝ [📄 Fetch ZORI Data]\n⬇\n[🤖 AI Agent Analysis]\n⬇\n[⚖️ Compare Old vs New] → false → [🚫 Do Nothing]\n↳ true → [📤 Update Google Sheet]\n\n\n---\n\n## 🌟 Want to Expand?\n\n* 🟢 Display results live in your Bolt web app  \n* 🛎️ Add email or Slack alerts for major rent spikes  \n* 📊 Build rent dashboards for property managers  \n* 🏙️ Add filters by bedroom count or property type (UI only)\n",
+        "height": 2814,
+        "width": 1289,
+        "color": 4
+      },
+      "id": "b0e2647e-9bf5-4dd4-8114-863dc2f9ba1a",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        -112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b25022dc-2a54-4738-9720-230af526fa5d",
+      "name": "Auto-fixing Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "position": [
+        3264,
+        1840
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "0f5ff62f-d358-4031-a2a7-f771e0d6fe81",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        3280,
+        2112
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "zYulvvykMZT1xYJ7",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"plans\": [\n    {\n      \"plan_name\": \"Free Forever\",\n      \"price\": \"Free\",\n      \"key_features\": [\n        \"60MB Storage\",\n        \"Unlimited Tasks\",\n        \"Unlimited Free Plan Members\",\n        \"Two-Factor Authentication\",\n        \"Collaborative Docs\",\n        \"Kanban Boards\",\n        \"Sprint Management\",\n        \"Calendar View\",\n        \"Custom Field Manager Basic\",\n        \"In-App Video Recording\",\n        \"24/7 Support\",\n        \"1 Form\"\n      ]\n    },\n    {\n      \"plan_name\": \"Unlimited\",\n      \"price\": \"$7 per user per month\",\n      \"key_features\": [\n        \"Everything in Free Forever plus\",\n        \"2GB Storage per user\",\n        \"Unlimited Folders and Spaces\",\n        \"Unlimited Integrations\",\n        \"Unlimited Gantt Charts\",\n        \"Unlimited Custom Fields\",\n        \"Unlimited Chat Messages\",\n        \"Unlimited Forms\",\n        \"Guests with Permissions\",\n        \"Email in ClickUp\",\n        \"3 Teams (User Group)\",\n        \"Native Time Tracking\",\n        \"Goals & Portfolios\",\n        \"Resource Management\",\n        \"AI Compatible\"\n      ]\n    },\n    {\n      \"plan_name\": \"Business\",\n      \"price\": \"$12 per user per month\",\n      \"key_features\": [\n        \"Everything in Unlimited, plus\",\n        \"Google SSO\",\n        \"Unlimited Storage\",\n        \"Unlimited Teams\",\n        \"Unlimited Message History\",\n        \"Unlimited Mind Maps\",\n        \"Unlimited Activity views\",\n        \"Unlimited Timeline views\",\n        \"Unlimited Dashboards\",\n        \"Unlimited Whiteboards\",\n        \"Sprint Points & Reporting\",\n        \"Automation Integrations\",\n        \"Custom Exporting\",\n        \"Private Whiteboards\",\n        \"Workload Management\",\n        \"SMS 2-Factor Authentication\",\n        \"More Automations\"\n      ]\n    },\n    {\n      \"plan_name\": \"Enterprise\",\n      \"price\": \"Custom pricing\",\n      \"key_features\": [\n        \"Everything in Business, plus\",\n        \"White Labeling\",\n        \"Conditional Logic in Forms\",\n        \"Team Sharing for Spaces\",\n        \"Custom Roles\",\n        \"Custom Capacity in Workload\",\n        \"Enterprise API\",\n        \"Unlimited Posts\",\n        \"Default Personal Views\",\n        \"Advanced Permissions\",\n        \"Advanced Public Sharing\",\n        \"MSA & HIPPA Available\",\n        \"Single Sign-On (SSO)\",\n        \"SCIM Provisioning\",\n        \"US, EU, & APAC Data Residency\",\n        \"Live Onboarding Training\",\n        \"Customer Success Manager\",\n        \"Access to Managed Services\"\n      ]\n    }\n  ]\n}\n"
+      },
+      "id": "44a40a39-67c1-4445-9b8b-f5dcda67ed99",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        3408,
+        2080
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b705b7de-9cad-4f5d-9579-ef0101089921",
+              "leftValue": "={{$json[\"Date\"]}}",
+              "rightValue": "2025-06-27T00:00:00",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2688,
+        1504
+      ],
+      "id": "9eacfc36-486d-4ac1-a995-f7c9a229d22e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "https://smartrentalreports.com/report.html?zip=33101&median_price=2400",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3920,
+        1600
+      ],
+      "id": "1679fff5-d58e-4994-aae7-fe5d77e67b5e",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI agent": {
+      "main": [
+        [
+          {
+            "node": "If price changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If price changes": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Pricing data": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 OpenAI: LLM Brain": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🛠️ Set Search Parameters": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Pricing data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⏰ Trigger: Check Job Listings": {
+      "main": [
+        [
+          {
+            "node": "🛠️ Set Search Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "ae72753b-2fec-4236-97a9-bd39dd170f76",
+  "meta": {
+    "templateId": "5948",
+    "instanceId": "b0333b5daa19c2939d99317ff3191842117d7e672a88bbadce0defbb6403e24f"
+  },
+  "id": "E15tvDqpd55YXxic",
+  "tags": []
+}
